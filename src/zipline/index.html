@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zip Line Thoát Hồ Ly – Phương trình đường thẳng (Toán 12)</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="home">
+    <div class="hero">
+      <h1>🌕 Zip Line Thoát Hồ Ly</h1>
+      <div class="muted">Phương trình đường thẳng trong không gian Oxyz · Toán 12</div>
+      <div class="chars"><canvas id="heroStudent"></canvas><canvas id="heroFox"></canvas></div>
+      <p class="story">Đêm trăng tròn, nhóm bạn cắm trại trên đỉnh núi thì phát hiện con hồ ly giả dạng người.
+        Hồ ly đuổi theo! Viết đúng <b>phương trình đường thẳng AB</b> để bắn dây zip line sang vách bên kia,
+        tìm đúng <b>cao độ z của điểm M</b> để dựng cột đỡ giữa dây, rồi đu qua vực mà thoát thân.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>🎒 Học sinh vào phòng</h2>
+        <form id="joinForm" autocomplete="off">
+          <label>Mã phòng
+            <input id="code" class="code-input" type="text" inputmode="numeric" maxlength="4" placeholder="0000" required>
+          </label>
+          <label>Tên của em
+            <input id="name" type="text" maxlength="20" placeholder="Ví dụ: Lan 12A1" required>
+          </label>
+          <div class="error" id="joinErr"></div>
+          <button class="btn primary big" type="submit">Vào phòng</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>🧑‍🏫 Giáo viên</h2>
+        <p class="muted">Tạo phòng có mã 4 số, xem danh sách vào phòng, bấm Bắt đầu và chiếu bảng xếp hạng sống.</p>
+        <p><a class="btn big" id="teacherLink" href="teacher.html">Tạo phòng chơi</a></p>
+        <hr style="border-color: var(--line)">
+        <h2>🏃 Luyện tập một mình</h2>
+        <p class="muted">Chơi thử 8 màn, không cần phòng, không xếp hạng.</p>
+        <p><a class="btn big" id="soloLink" href="play.html?mode=solo">Chơi luyện tập</a></p>
+      </div>
+    </div>
+    <p class="muted small" id="modeNote" style="text-align:center;margin-top:18px"></p>
+  </div>
+
+  <script type="module">
+    import { getBackend } from './js/net.js';
+    import { loadSprites } from './js/sprites.js';
+
+    const qs = new URLSearchParams(location.search);
+    const keep = qs.has('local') ? '&local=1' : '';
+    document.getElementById('teacherLink').href = 'teacher.html' + (keep ? '?local=1' : '');
+    document.getElementById('soloLink').href = 'play.html?mode=solo';
+    if (qs.get('room')) document.getElementById('code').value = qs.get('room');
+
+    loadSprites().then(({ student, fox }) => {
+      for (const [id, img] of [['heroStudent', student], ['heroFox', fox]]) {
+        if (!img) continue;
+        const c = document.getElementById(id);
+        c.height = 260; c.width = Math.round(260 * img.width / img.height);
+        c.style.height = '130px';
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      }
+    });
+
+    const backendP = getBackend();
+    backendP.then((b) => {
+      document.getElementById('modeNote').textContent = b.kind === 'local'
+        ? 'Đang ở chế độ THỬ CỤC BỘ (chưa cấu hình Firebase): phòng chỉ hoạt động giữa các tab trên cùng trình duyệt này.'
+        : 'Đã kết nối Firebase.';
+    });
+
+    document.getElementById('joinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = document.getElementById('code').value.trim();
+      const name = document.getElementById('name').value.trim().slice(0, 20);
+      const err = document.getElementById('joinErr');
+      if (!/^\d{4}$/.test(code)) { err.textContent = 'Mã phòng gồm 4 chữ số.'; return; }
+      if (!name) { err.textContent = 'Em nhập tên nhé.'; return; }
+      err.textContent = 'Đang kiểm tra phòng…';
+      try {
+        const b = await backendP;
+        if (!(await b.roomExists(code))) { err.textContent = 'Không tìm thấy phòng ' + code + '.'; return; }
+        sessionStorage.setItem('zipline:name:' + code, name);
+        if (b.kind !== 'local') localStorage.setItem('zipline:name:' + code, name);
+        location.href = `play.html?room=${code}${keep}`;
+      } catch (ex) {
+        err.textContent = 'Lỗi kết nối: ' + ex.message;
+      }
+    });
+  </script>
+</body>
+</html>

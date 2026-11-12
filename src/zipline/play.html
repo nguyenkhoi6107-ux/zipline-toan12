@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zip Line Thoát Hồ Ly – Màn chơi</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="play">
+    <div id="banner" class="banner hidden"></div>
+    <header class="hud">
+      <div class="lives" id="lives" title="Số mạng"></div>
+      <div class="progress" id="progress" title="Tiến độ các màn"></div>
+      <div class="timer" id="timer">--:--</div>
+      <div class="foxbar" id="foxbar">
+        <span>🦊 Hồ ly</span>
+        <div class="bar"><div id="foxFill" style="width:70%"></div></div>
+        <span class="dist" id="foxDist">100 m</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="stage-col">
+        <canvas id="scene"></canvas>
+
+        <div class="card">
+          <div class="q-head">
+            <span class="lv">Màn <span id="lvNum">1</span>/<span id="lvTotal">8</span></span>
+            <span class="muted small" id="who"></span>
+          </div>
+
+          <div class="part" id="partA">
+            <p><b>a)</b> Cho <span class="pA" id="qA"></span> và <span class="pB" id="qB"></span>.
+              Viết phương trình tham số của đường thẳng AB.</p>
+            <div class="eq">
+              <div class="brace">{</div>
+              <div class="rows">
+                <div class="row"><span class="var">x =</span><input type="text" data-p="0" aria-label="x0" autocomplete="off"><span>+</span><input type="text" data-d="0" aria-label="a1" autocomplete="off"><span>t</span></div>
+                <div class="row"><span class="var">y =</span><input type="text" data-p="1" aria-label="y0" autocomplete="off"><span>+</span><input type="text" data-d="1" aria-label="a2" autocomplete="off"><span>t</span></div>
+                <div class="row"><span class="var">z =</span><input type="text" data-p="2" aria-label="z0" autocomplete="off"><span>+</span><input type="text" data-d="2" aria-label="a3" autocomplete="off"><span>t</span></div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="btnA">🪝 Bắn dây</button>
+              <span class="muted small">Nhận số nguyên, phân số (1/2), thập phân (2,5). Hệ số âm thì gõ dấu trừ, ví dụ −3.</span>
+            </div>
+          </div>
+
+          <div class="part locked" id="partB">
+            <p><b>b)</b> Điểm <span class="pM" id="qM"></span> thuộc đường thẳng AB. Dùng phương trình vừa viết, tìm <b id="qAskLabel">cao độ z</b> của M.</p>
+            <div class="zrow">
+              <span id="qAskVar">z =</span><input type="text" id="zIn" aria-label="Tọa độ cần tìm của M" autocomplete="off">
+              <button class="btn primary" id="btnB">🏗️ Dựng cột</button>
+            </div>
+          </div>
+          <div class="feedback" id="feedback"></div>
+        </div>
+      </section>
+
+      <aside class="side-col">
+        <div class="card">
+          <h3>Hình 3D minh họa</h3>
+          <canvas id="view3d"></canvas>
+          <p class="cap" id="view3dCap">Hình hiện sau mỗi câu trả lời. Kéo để xoay.</p>
+        </div>
+        <div class="card" id="boardCard">
+          <h3>Bảng xếp hạng</h3>
+          <ol class="board board-list" id="board"></ol>
+        </div>
+      </aside>
+    </main>
+
+    <div id="overlay" class="overlay hidden">
+      <div class="overlay-box card" id="overlayBox"></div>
+    </div>
+  </div>
+  <script type="module" src="js/play.js"></script>
+</body>
+</html>

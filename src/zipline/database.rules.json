@@ -1,0 +1,22 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$code": {
+        ".read": true,
+        ".write": "!data.exists() || newData.exists()",
+        ".validate": "$code.matches(/^[0-9]{4}$/)",
+        "status": { ".validate": "newData.isString() && newData.val().matches(/^(lobby|running|ended)$/)" },
+        "players": {
+          "$pid": {
+            ".validate": "$pid.length <= 40",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20" },
+            "levelsPassed": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+            "lives": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" }
+          }
+        }
+      }
+    }
+  }
+}

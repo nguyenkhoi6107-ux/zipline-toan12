@@ -1,0 +1,10 @@
+{
+  "name": "zipline-toan12",
+  "private": true,
+  "type": "module",
+  "description": "Game Zip Line – Phương trình đường thẳng Toán 12",
+  "scripts": {
+    "test": "node --test ../../tests/zipline/*.test.js",
+    "start": "python3 -m http.server 8080"
+  }
+}

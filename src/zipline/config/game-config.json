@@ -1,0 +1,19 @@
+{
+  "_ghi_chu": "Các tham số chỉnh khi thử với lớp (mục 3, mục 10). Khoảng cách tính bằng mét ảo. Giáo viên có thể ghi đè khi tạo phòng.",
+  "levels": 8,
+  "lives": 2,
+  "timeLimitMinutes": 15,
+  "endOnFirstFinish": true,
+  "monster": {
+    "startDistance": 100,
+    "maxDistance": 140,
+    "speedPerSecond": 0.5,
+    "jumpOnWrong": 25,
+    "pushBackOnRespawn": 60,
+    "gainOnLineCorrect": 10,
+    "gainOnLevelComplete": 30
+  },
+  "network": {
+    "publishIntervalMs": 1000
+  }
+}
