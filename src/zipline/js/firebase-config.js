@@ -1,16 +1,13 @@
 /**
- * firebase-config.js — Điền cấu hình Firebase của thầy/cô vào đây.
- *
- * Cách lấy: Firebase Console → Project settings → Your apps → Web app → SDK setup and configuration.
- * Bắt buộc có `databaseURL` (Realtime Database). Xem src/zipline/README.md.
- *
- * Để trống `databaseURL` thì game chạy ở chế độ THỬ CỤC BỘ: phòng chơi chỉ hoạt động giữa các
- * tab trên cùng một trình duyệt (đủ để thử luồng giáo viên – học sinh trên một máy).
+ * firebase-config.js — Cấu hình Firebase Realtime Database cho phòng chơi.
  */
 export const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  databaseURL: '',
-  projectId: '',
-  appId: '',
+  apiKey: 'AIzaSyBbDcy_zMDebffc4xrdtd2bElunKFohD_o',
+  authDomain: 'zipline-toan12.firebaseapp.com',
+  databaseURL: 'https://zipline-toan12-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'zipline-toan12',
+  storageBucket: 'zipline-toan12.firebasestorage.app',
+  messagingSenderId: '452150675336',
+  appId: '1:452150675336:web:4d3ec4f6f45539b43f1c3d',
+  measurementId: 'G-QSR3HR9EL2',
 };
