@@ -514,7 +514,7 @@ export class Scene {
     // Nhãn tọa độ
     const lv = level;
     this._label(`A${formatPoint(lv.A)}`, L.a.x, L.a.y - 22, '#7ac8ff');
-    this._label(`B${formatPoint(lv.B)}`, L.b.x, L.b.y - 22, '#ffb36b');
+    this._label(lv.hideB ? 'Cột B' : `B${formatPoint(lv.B)}`, L.b.x, L.b.y - 22, '#ffb36b');
     if (this.stage === 'z' || this.poleM.p > 0) {
       const pulse = 5 + Math.sin(this.time * 5) * 2;
       g.strokeStyle = '#ffd84a';

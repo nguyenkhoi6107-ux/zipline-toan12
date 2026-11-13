@@ -179,24 +179,71 @@ function tierFor(levelIndex, totalLevels) {
   };
 }
 
+export const QUESTION_TYPES = [
+  'two_points_parametric',
+  'two_points_canonical',
+  'parallel_line',
+  'plane_normal',
+];
+
+/**
+ * Tìm vectơ pháp tuyến nguyên n = (n0, n1, n2) sao cho w · n = 0,
+ * n[missingIdx] ≠ 0 và có ít nhất 2 thành phần khác 0.
+ */
+function findPlaneNormal(rng, w, missingIdx) {
+  const others = [0, 1, 2].filter((k) => k !== missingIdx);
+  for (let i = 0; i < 80; i++) {
+    const n = [0, 0, 0];
+    n[others[0]] = randInt(rng, -5, 5);
+    n[others[1]] = randInt(rng, -5, 5);
+    if (n[others[0]] === 0 && n[others[1]] === 0) continue;
+    const dotOther = w[others[0]] * n[others[0]] + w[others[1]] * n[others[1]];
+    if (dotOther === 0 || dotOther % w[missingIdx] !== 0) continue;
+    const nMiss = -dotOther / w[missingIdx];
+    if (nMiss === 0 || Math.abs(nMiss) > 9) continue;
+    n[missingIdx] = nMiss;
+    if (n.filter((c) => c !== 0).length < 2) continue;
+    const g = gcd(gcd(n[0], n[1]), n[2]);
+    return g > 1 ? n.map((c) => c / g) : n;
+  }
+  return null;
+}
+
 /**
  * Sinh một màn: A, B, M nguyên; M = A + t·AB với t = p/q ≠ 1/2 (không bao giờ là trung điểm).
- * Điểm M đa dạng:
- *  - Tỉ số t thay đổi liên tục (gần A, gần B, hoặc nằm trên đường thẳng kéo dài ngoài đoạn AB).
- *  - Tọa độ cần tìm của M luân phiên giữa hoành độ x, tung độ y, cao độ z (askIndex ∈ {0,1,2}).
- *  - Đôi khi một trong hai tọa độ đã biết có hệ số chỉ phương bằng 0 (bẫy 0t), buộc học sinh
- *    phải dùng tọa độ đã biết còn lại để giải t.
+ * Hỗ trợ 4 dạng câu hỏi:
+ *  1. two_points_parametric: Cho A, B -> viết PT tham số AB
+ *  2. two_points_canonical:  Cho A, B -> viết PT chính tắc AB
+ *  3. parallel_line:         Cho A và đường thẳng Δ có VTCP u_Δ -> viết PT tham số / chính tắc
+ *  4. plane_normal:          Cho A, mp (P) có VTPT n, VTCP khuyết 1 thành phần m -> giải u·n=0 rồi viết PT
  *
  * @param {() => number} rng
  * @param {number} levelIndex  0-based
  * @param {number} totalLevels
  * @param {[number, number]|null} [forcedRatio] Tỉ số [p, q] ép trước để cả ván không trùng nhau
  * @param {number|null} [forcedAskIndex] Trục cần hỏi (0=x, 1=y, 2=z)
+ * @param {string|null} [forcedType] Dạng câu hỏi ép trước
+ * @param {string|null} [forcedEqForm] Dạng phương trình ('parametric'|'canonical') ép trước
  */
-export function generateLevel(rng, levelIndex = 0, totalLevels = 8, forcedRatio = null, forcedAskIndex = null) {
+export function generateLevel(
+  rng,
+  levelIndex = 0,
+  totalLevels = 8,
+  forcedRatio = null,
+  forcedAskIndex = null,
+  forcedType = null,
+  forcedEqForm = null,
+) {
   const tier = tierFor(levelIndex, totalLevels);
   const askIndex = forcedAskIndex ?? (levelIndex === 0 ? 2 : randInt(rng, 0, 2));
   const knownAxes = [0, 1, 2].filter((k) => k !== askIndex);
+  const questionType = forcedType ?? pick(rng, QUESTION_TYPES);
+  const eqForm = forcedEqForm ?? (
+    questionType === 'two_points_parametric' ? 'parametric'
+      : questionType === 'two_points_canonical' ? 'canonical'
+        : rng() < 0.5 ? 'parametric' : 'canonical'
+  );
+  const hideB = questionType === 'parallel_line' || questionType === 'plane_normal';
 
   for (let attempt = 0; attempt < 400; attempt++) {
     const A = [0, 1, 2].map(() => randInt(rng, tier.aMin, tier.aMax));
@@ -207,12 +254,12 @@ export function generateLevel(rng, levelIndex = 0, totalLevels = 8, forcedRatio 
       return c;
     });
 
-    // Bẫy tư duy: cho 1 trong 2 trục đã biết có thành phần vectơ bằng 0,
-    // buộc học sinh phải dùng trục đã biết còn lại để tìm t.
-    if (rng() < tier.zeroProb) {
+    // Bẫy tư duy: chỉ dùng cho phương trình tham số (phương trình chính tắc mẫu phải khác 0).
+    if (eqForm === 'parametric' && rng() < tier.zeroProb) {
       const zeroAxis = pick(rng, knownAxes);
       w[zeroAxis] = 0;
     }
+    if (eqForm === 'canonical' && w.some((c) => c === 0)) continue;
     // Phải có ít nhất 1 trục đã biết khác 0 để giải được t, và trục cần hỏi phải khác 0
     if (knownAxes.every((k) => w[k] === 0)) continue;
     if (w[askIndex] === 0) continue;
@@ -235,27 +282,78 @@ export function generateLevel(rng, levelIndex = 0, totalLevels = 8, forcedRatio 
     const B = A.map((a, i) => a + AB[i]);
     const M = A.map((a, i) => a + p * w[i]);
     if ([...B, ...M].some((c) => Math.abs(c) > tier.maxCoord)) continue;
-    return {
+
+    const base = {
       A, B, M, AB,
       t: rat(p, q),
       askIndex,
       askAxis: AXIS_NAMES[askIndex],
       askLabel: AXIS_LABELS[askIndex],
+      questionType,
+      eqForm,
+      hideB,
     };
+
+    if (questionType === 'parallel_line') {
+      const scale = pick(rng, [-2, -1, 1, 2]);
+      return { ...base, parallelDir: w.map((c) => c * scale) };
+    }
+
+    if (questionType === 'plane_normal') {
+      const nonZeroAxes = [0, 1, 2].filter((k) => w[k] !== 0);
+      if (nonZeroAxes.length < 2) continue;
+      const missingIdx = pick(rng, nonZeroAxes);
+      const planeNormal = findPlaneNormal(rng, w, missingIdx);
+      if (!planeNormal) continue;
+      const dirTemplate = w.map((c, i) => (i === missingIdx ? null : c));
+      return { ...base, planeNormal, missingIdx, dirTemplate };
+    }
+
+    return base;
   }
   // Dự phòng hiếm gặp (vẫn không dùng trung điểm)
-  return {
+  const fallback = {
     A: [2, -3, 1], B: [-4, 6, 10], M: [0, 0, 4], AB: [-6, 9, 9],
     t: rat(1, 3), askIndex: 2, askAxis: 'z', askLabel: 'cao độ z',
+    questionType, eqForm, hideB,
   };
+  if (questionType === 'parallel_line') return { ...fallback, parallelDir: [-2, 3, 3] };
+  if (questionType === 'plane_normal') {
+    return { ...fallback, planeNormal: [3, 1, 1], missingIdx: 2, dirTemplate: [-2, 3, null] };
+  }
+  return fallback;
 }
 
-/** Sinh cả bộ đề cho một học sinh, đảm bảo tỉ số t và tọa độ hỏi của M đa dạng qua từng màn. */
+/** Xáo trộn mảng theo rng (Fisher-Yates). */
+function shuffle(rng, arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Sinh cả bộ đề cho một học sinh, đảm bảo đa dạng tỉ số t, trục hỏi và dạng câu hỏi qua từng màn. */
 export function generateRun(seed, totalLevels = 8) {
   const rng = makeRng(seed);
   const used = new Set();
   let lastZone = null; // 'nearA' | 'nearB' | 'outside'
   let lastAsk = -1;
+
+  // Phân bố đều và ngẫu nhiên 4 dạng câu hỏi, tránh 2 màn liên tiếp trùng dạng.
+  let types = [];
+  while (types.length < totalLevels) {
+    types.push(...shuffle(rng, QUESTION_TYPES));
+  }
+  types = types.slice(0, totalLevels);
+  for (let i = 1; i < types.length; i++) {
+    if (types[i] === types[i - 1]) {
+      const swapIdx = types.findIndex((t, k) => k > i && t !== types[i - 1]);
+      if (swapIdx !== -1) [types[i], types[swapIdx]] = [types[swapIdx], types[i]];
+    }
+  }
+
   return Array.from({ length: totalLevels }, (_, i) => {
     const tier = tierFor(i, totalLevels);
     const zoneOf = ([p, q]) => (p < 0 || p > q ? 'outside' : p / q < 0.5 ? 'nearA' : 'nearB');
@@ -272,7 +370,7 @@ export function generateRun(seed, totalLevels = 8) {
     const askIndex = pick(rng, askChoices);
     lastAsk = askIndex;
 
-    return generateLevel(rng, i, totalLevels, ratio, askIndex);
+    return generateLevel(rng, i, totalLevels, ratio, askIndex, types[i]);
   });
 }
 
@@ -282,12 +380,13 @@ export function generateRun(seed, totalLevels = 8) {
 
 /**
  * Chấm câu a.
- * Đúng khi: (1) vectơ chỉ phương u ≠ 0 và u // AB; (2) điểm gốc P nằm trên đường AB.
+ * Đúng khi: (1) vectơ chỉ phương u ≠ 0 và u // AB (nếu chính tắc thì mọi thành phần u ≠ 0);
+ *           (2) điểm gốc P nằm trên đường thẳng.
  *
- * @param {{A:number[], B:number[]}} level
+ * @param {{A:number[], B:number[], eqForm?:string}} level
  * @param {{point:(string|number)[], dir:(string|number)[]}} answer  6 ô số học sinh nhập
  * @returns {{correct:boolean, reason:string, point?:number[], dir?:number[]}}
- *   reason ∈ 'ok' | 'invalid' | 'zero_dir' | 'not_parallel' | 'point_off_line'
+ *   reason ∈ 'ok' | 'invalid' | 'zero_dir' | 'zero_canonical_dir' | 'not_parallel' | 'point_off_line'
  */
 export function gradeLine(level, answer) {
   const P = answer.point.map(parseRational);
@@ -299,6 +398,9 @@ export function gradeLine(level, answer) {
   const AB = toRatVec(level.B.map((b, i) => b - level.A[i]));
 
   if (isZeroVec(u)) return { correct: false, reason: 'zero_dir', ...numeric };
+  if (level?.eqForm === 'canonical' && u.some(isZero)) {
+    return { correct: false, reason: 'zero_canonical_dir', ...numeric };
+  }
   if (!parallel(u, AB)) return { correct: false, reason: 'not_parallel', ...numeric };
   const AP = P.map((x, i) => sub(x, A[i]));
   if (!parallel(AP, AB)) return { correct: false, reason: 'point_off_line', ...numeric };
@@ -321,18 +423,32 @@ export function gradeZ(level, raw) {
 export function feedbackFor(part, reason, level = null) {
   const axis = level?.askAxis || 'z';
   const known = ['x', 'y', 'z'].filter((a) => a !== axis).join(' hoặc ');
+  const qType = level?.questionType;
+  const notParallelMsg = qType === 'parallel_line'
+    ? 'Vectơ chỉ phương chưa cùng phương với vectơ chỉ phương của Δ.'
+    : qType === 'plane_normal'
+      ? 'Vectơ chỉ phương chưa đúng. Nhớ: d ⊂ (P) nên u · n = 0, nhân lại bằng 0 để giải thành phần còn thiếu.'
+      : 'Vectơ chỉ phương chưa cùng phương với AB. Nhớ: AB = (xB − xA; yB − yA; zB − zA).';
+  const offLineMsg = level?.hideB
+    ? 'Vectơ đúng phương, nhưng điểm gốc chưa nằm trên đường thẳng d. Thử lấy chính điểm A.'
+    : 'Vectơ đúng phương, nhưng điểm gốc chưa nằm trên đường AB. Thử lấy chính điểm A hoặc B.';
+  const wrongBMsg = level?.eqForm === 'canonical'
+    ? `Chưa đúng. Thay tọa độ đã biết (${known}) của M vào phương trình chính tắc để tìm ${axis}.`
+    : `Chưa đúng. Thay tọa độ đã biết (${known}) của M vào phương trình để giải tìm t, rồi thay t vào phương trình của ${axis}.`;
+
   const msgs = {
     a: {
       ok: 'Chính xác! Dây đã bắn trúng cột bên kia.',
       invalid: 'Còn ô trống hoặc số chưa đọc được. Nhập số nguyên, phân số (1/2) hoặc thập phân (2,5).',
       zero_dir: 'Vectơ chỉ phương không được bằng vectơ 0.',
-      not_parallel: 'Vectơ chỉ phương chưa cùng phương với AB. Nhớ: AB = (xB − xA; yB − yA; zB − zA).',
-      point_off_line: 'Vectơ đúng phương, nhưng điểm gốc chưa nằm trên đường AB. Thử lấy chính điểm A hoặc B.',
+      zero_canonical_dir: 'Mẫu số (tọa độ vectơ chỉ phương) trong phương trình chính tắc phải khác 0.',
+      not_parallel: notParallelMsg,
+      point_off_line: offLineMsg,
     },
     b: {
       ok: 'Chính xác! Cột đỡ tại M đã dựng xong.',
       invalid: 'Chưa đọc được số. Nhập số nguyên, phân số hoặc thập phân.',
-      wrong: `Chưa đúng. Thay tọa độ đã biết (${known}) của M vào phương trình để giải tìm t, rồi thay t vào phương trình của ${axis}.`,
+      wrong: wrongBMsg,
     },
   };
   return msgs[part][reason] || '';

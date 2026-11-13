@@ -138,7 +138,7 @@ export class View3D {
     dot(d.A, '#7ac8ff');
     text(d.A, `A${formatPoint(d.A)}`, '#7ac8ff', -7, 4, 'right');
     dot(d.B, '#ffb36b');
-    text(d.B, `B${formatPoint(d.B)}`, '#ffb36b');
+    text(d.B, d.hideB ? 'Cột B' : `B${formatPoint(d.B)}`, '#ffb36b');
 
     if (d.M) {
       // Hình chiếu của M xuống mặt Oxy giúp thấy rõ vị trí trong không gian.

@@ -23,9 +23,19 @@ const roomCode = qs.get('room');
 const solo = !roomCode;
 const keepLocal = qs.has('local') ? '?local=1' : '';
 
-const pInputs = [0, 1, 2].map((i) => document.querySelector(`[data-p="${i}"]`));
-const dInputs = [0, 1, 2].map((i) => document.querySelector(`[data-d="${i}"]`));
-const allA = [...pInputs.flatMap((p, i) => [p, dInputs[i]])]; // thứ tự tab: x0, a1, y0, a2, z0, a3
+const paramP = [0, 1, 2].map((i) => document.querySelector(`[data-p="${i}"]`));
+const paramD = [0, 1, 2].map((i) => document.querySelector(`[data-d="${i}"]`));
+const allParam = paramP.flatMap((p, i) => [p, paramD[i]]); // thứ tự tab: x0, a1, y0, a2, z0, a3
+
+const canonP = [0, 1, 2].map((i) => document.querySelector(`[data-cp="${i}"]`));
+const canonD = [0, 1, 2].map((i) => document.querySelector(`[data-cd="${i}"]`));
+const allCanon = canonP.flatMap((p, i) => [p, canonD[i]]);
+
+function activeInputs() {
+  return run?.level?.eqForm === 'canonical'
+    ? { p: canonP, d: canonD, all: allCanon }
+    : { p: paramP, d: paramD, all: allParam };
+}
 
 const defaults = await loadConfig();
 const sprites = await loadSprites();
@@ -103,24 +113,67 @@ function setFeedback(text, kind = '') {
   $('feedback').className = 'feedback ' + kind;
 }
 
+function renderPromptA(lv) {
+  const p = $('qPromptA');
+  const formText = lv.eqForm === 'canonical' ? 'phương trình chính tắc' : 'phương trình tham số';
+  const b = el('b', '', 'a) ');
+  if (lv.questionType === 'parallel_line') {
+    p.replaceChildren(
+      b,
+      'Đường thẳng dây d đi qua ',
+      el('span', 'pA', `A${formatPoint(lv.A)}`),
+      ' và song song với đường thẳng Δ có vectơ chỉ phương ',
+      el('span', 'pVec', `u_Δ = ${formatPoint(lv.parallelDir)}`),
+      `. Viết ${formText} của đường thẳng d.`,
+    );
+  } else if (lv.questionType === 'plane_normal') {
+    const uTpl = `(${lv.dirTemplate.map((v) => (v === null ? 'm' : v)).join('; ')})`;
+    p.replaceChildren(
+      b,
+      'Đường thẳng dây d đi qua ',
+      el('span', 'pA', `A${formatPoint(lv.A)}`),
+      ', nằm trong mặt phẳng (P) có vectơ pháp tuyến ',
+      el('span', 'pVec', `n = ${formatPoint(lv.planeNormal)}`),
+      ' và có vectơ chỉ phương dạng ',
+      el('span', 'pVec', `u = ${uTpl}`),
+      `. Tìm m rồi viết ${formText} của đường thẳng d.`,
+    );
+  } else {
+    p.replaceChildren(
+      b,
+      'Cho ',
+      el('span', 'pA', `A${formatPoint(lv.A)}`),
+      ' và ',
+      el('span', 'pB', `B${formatPoint(lv.B)}`),
+      `. Viết ${formText} của đường thẳng AB.`,
+    );
+  }
+}
+
 function renderLevel() {
   const lv = run.level;
   const askIdx = lv.askIndex ?? 2;
   const askAxis = lv.askAxis || 'z';
   const askLabel = lv.askLabel || 'cao độ z';
+  const isCanon = lv.eqForm === 'canonical';
   $('lvNum').textContent = String(run.levelIndex + 1);
   $('lvTotal').textContent = String(run.totalLevels);
-  $('qA').textContent = `A${formatPoint(lv.A)}`;
-  $('qB').textContent = `B${formatPoint(lv.B)}`;
+  renderPromptA(lv);
+  $('eqParametric').classList.toggle('hidden', isCanon);
+  $('eqCanonical').classList.toggle('hidden', !isCanon);
+  if ($('qLineName')) $('qLineName').textContent = lv.hideB ? 'd' : 'AB';
   $('qM').textContent = `M${formatPoint(lv.M, askIdx)}`;
   if ($('qAskLabel')) $('qAskLabel').textContent = askLabel;
   if ($('qAskVar')) $('qAskVar').textContent = `${askAxis} =`;
+  const { p, d, all } = activeInputs();
   const inZ = run.stage === 'z';
-  if (!inZ) allA.forEach((i) => { i.value = ''; });
-  else if (allA.every((i) => !i.value)) {
+  if (!inZ) {
+    allParam.forEach((i) => { i.value = ''; });
+    allCanon.forEach((i) => { i.value = ''; });
+  } else if (all.every((i) => !i.value)) {
     // Khôi phục sau khi tải lại: điền lại một phương trình đúng.
-    lv.A.forEach((v, i) => { pInputs[i].value = String(v); });
-    lv.AB.forEach((v, i) => { dInputs[i].value = String(v); });
+    lv.A.forEach((v, i) => { p[i].value = String(v); });
+    lv.AB.forEach((v, i) => { d[i].value = String(v); });
   }
   $('zIn').value = '';
   lockParts();
@@ -131,10 +184,13 @@ function renderLevel() {
 function lockParts() {
   const inZ = run.stage === 'z';
   const playing = run.status === 'playing' && started && !ended;
+  const { all } = activeInputs();
   $('partA').classList.toggle('locked', inZ || !playing);
   $('partA').classList.toggle('solved', inZ);
   $('partB').classList.toggle('locked', !inZ || !playing);
-  allA.forEach((i) => { i.disabled = inZ || busy || !playing; });
+  allParam.forEach((i) => { i.disabled = true; });
+  allCanon.forEach((i) => { i.disabled = true; });
+  all.forEach((i) => { i.disabled = inZ || busy || !playing; });
   $('btnA').disabled = inZ || busy || !playing;
   $('zIn').disabled = !inZ || busy || !playing;
   $('btnB').disabled = !inZ || busy || !playing;
@@ -171,23 +227,25 @@ async function handleCatchEvent(ev) {
 
 async function submitA() {
   if (busy || !run || run.stage !== 'line') return;
-  const res = run.submitLine({ point: pInputs.map((i) => i.value), dir: dInputs.map((i) => i.value) });
+  const { p, d } = activeInputs();
+  const res = run.submitLine({ point: p.map((i) => i.value), dir: d.map((i) => i.value) });
   if (!res) return;
   if (!res.penalized && !res.correct) { setFeedback(res.feedback, 'warn'); return; }
   const lv = run.level;
+  const lineName = lv.hideB ? 'd' : 'AB';
   await withAnimation(async () => {
     if (res.correct) {
       setFeedback(res.feedback, 'ok');
-      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: lv.askIndex ?? 2, showZ: false });
-      $('view3dCap').textContent = `Đường thẳng của em trùng với AB. Điểm M thuộc AB, cần tìm ${lv.askLabel || 'cao độ z'}.`;
+      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: lv.askIndex ?? 2, showZ: false, hideB: !!lv.hideB });
+      $('view3dCap').textContent = `Đường thẳng của em trùng với ${lineName}. Điểm M thuộc ${lineName}, cần tìm ${lv.askLabel || 'cao độ z'}.`;
       await scene.shootRope();
       scene.setStage('z');
       lockParts();
       $('zIn').focus({ preventScroll: true });
     } else {
       setFeedback(res.feedback, 'bad');
-      view.show({ A: lv.A, B: lv.B, M: null, wrongLine: { point: res.point, dir: res.dir } });
-      $('view3dCap').textContent = 'Nét đỏ là đường thẳng em viết: nó không trùng với dây AB.';
+      view.show({ A: lv.A, B: lv.B, M: null, wrongLine: { point: res.point, dir: res.dir }, hideB: !!lv.hideB });
+      $('view3dCap').textContent = `Nét đỏ là đường thẳng em viết: nó không trùng với dây ${lineName}.`;
       await scene.failLine();
       await handleCatchEvent(res.event);
     }
@@ -202,26 +260,30 @@ async function submitB() {
   const lv = run.level;
   const askIdx = lv.askIndex ?? 2;
   const askAxis = lv.askAxis || 'z';
+  const lineName = lv.hideB ? 'd' : 'AB';
   await withAnimation(async () => {
     if (res.correct) {
       setFeedback(res.feedback, 'ok');
-      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: askIdx, showZ: true });
-      $('view3dCap').textContent = `M${formatPoint(lv.M)} thuộc đường thẳng AB (ứng với $\\vec{AM} = (${lv.t.n}/${lv.t.d})\\vec{AB}$).`.replace('$\\vec{AM} = (', 'AM = (').replace(')\\vec{AB}$', ')AB');
+      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: askIdx, showZ: true, hideB: !!lv.hideB });
+      $('view3dCap').textContent = lv.hideB
+        ? `M${formatPoint(lv.M)} thuộc đường thẳng d.`
+        : `M${formatPoint(lv.M)} thuộc đường thẳng AB (ứng với AM = (${lv.t.n}/${lv.t.d})AB).`;
       await scene.buildPoleAndZip();
       if (run.status === 'finished') {
         onFinished();
       } else {
         renderLevel();
-        setFeedback('Sang đoạn mới! Viết phương trình đường thẳng AB.', '');
+        const nextLine = run.level.hideB ? 'd' : 'AB';
+        setFeedback(`Sang đoạn mới! Viết phương trình đường thẳng ${nextLine}.`, '');
         await scene.fadeIn();
-        pInputs[0].focus({ preventScroll: true });
+        activeInputs().p[0].focus({ preventScroll: true });
       }
     } else {
       setFeedback(res.feedback, 'bad');
       const wrongM = [...lv.M];
       wrongM[askIdx] = res.z;
-      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: askIdx, showZ: false, wrongM, wrongAxis: askAxis });
-      $('view3dCap').textContent = `Điểm đỏ có ${askAxis} = ${res.z} nên lệch khỏi đường thẳng AB.`;
+      view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: askIdx, showZ: false, wrongM, wrongAxis: askAxis, hideB: !!lv.hideB });
+      $('view3dCap').textContent = `Điểm đỏ có ${askAxis} = ${res.z} nên lệch khỏi đường thẳng ${lineName}.`;
       await scene.failZ(res.z);
       await handleCatchEvent(res.event);
     }
@@ -230,11 +292,11 @@ async function submitB() {
 
 $('btnA').addEventListener('click', submitA);
 $('btnB').addEventListener('click', submitB);
-allA.forEach((inp, i) => inp.addEventListener('keydown', (e) => {
+[allParam, allCanon].forEach((group) => group.forEach((inp, i) => inp.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   e.preventDefault();
-  if (i < allA.length - 1) allA[i + 1].focus(); else submitA();
-}));
+  if (i < group.length - 1) group[i + 1].focus(); else submitA();
+})));
 $('zIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitB(); } });
 
 // ---------------------------------------------------------------------------
@@ -292,8 +354,9 @@ function beginCountdown() {
     if (run.status === 'eliminated') showEliminated();
     else if (run.status !== 'playing') onFinished();
     else {
-      setFeedback('Chạy! Viết phương trình đường thẳng AB để bắn dây.', '');
-      pInputs[0].focus({ preventScroll: true });
+      const lineName = run.level.hideB ? 'd' : 'AB';
+      setFeedback(`Chạy! Viết phương trình đường thẳng ${lineName} để bắn dây.`, '');
+      activeInputs().p[0].focus({ preventScroll: true });
     }
   };
   tick();

@@ -95,7 +95,7 @@ export class PlayerRun {
     if (this.status !== 'playing' || this.stage !== 'line') return null;
     const g = gradeLine(this.level, answer);
     // Ô trống / không đọc được: không phạt, chỉ nhắc (tránh mất mạng oan vì gõ nhầm).
-    if (g.reason === 'invalid') return { ...g, feedback: feedbackFor('a', g.reason), penalized: false };
+    if (g.reason === 'invalid') return { ...g, feedback: feedbackFor('a', g.reason, this.level), penalized: false };
     let event = null;
     if (g.correct) {
       this.correctCount += 1;
@@ -106,7 +106,7 @@ export class PlayerRun {
     } else {
       event = this._wrong();
     }
-    return { ...g, feedback: feedbackFor('a', g.reason), penalized: !g.correct, event };
+    return { ...g, feedback: feedbackFor('a', g.reason, this.level), penalized: !g.correct, event };
   }
 
   /**

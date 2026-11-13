@@ -32,6 +32,7 @@ a { color: var(--a); }
 .pA { color: var(--a); font-weight: 700; white-space: nowrap; }
 .pB { color: var(--b); font-weight: 700; white-space: nowrap; }
 .pM { color: var(--m); font-weight: 700; white-space: nowrap; }
+.pVec { color: #b794f4; font-weight: 700; white-space: nowrap; }
 
 .card {
   background: linear-gradient(180deg, var(--card2), var(--card));
@@ -122,8 +123,13 @@ input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
 .eq .brace { font-size: 4.6rem; line-height: 1; font-weight: 200; color: var(--muted); display: flex; align-items: center; }
 .eq .rows { display: grid; gap: 6px; }
 .eq .row, .zrow { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
-.eq input, .zrow input { width: 4.2em; text-align: center; font-weight: 700; font-size: 1.05rem; padding: 7px 4px; }
+.eq input, .zrow input, .eq-canon input { width: 4.2em; text-align: center; font-weight: 700; font-size: 1.05rem; padding: 7px 4px; }
 .eq .row .var { width: 2.2em; }
+.eq-canon { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.eq-canon .frac { display: inline-flex; flex-direction: column; align-items: center; }
+.eq-canon .num { display: flex; align-items: center; gap: 4px; padding-bottom: 6px; border-bottom: 2px solid var(--muted); font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
+.eq-canon .den { padding-top: 6px; display: flex; justify-content: center; }
+.eq-canon .eq-sign { font-weight: 700; font-size: 1.25rem; color: var(--muted); }
 .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .feedback { min-height: 1.5em; margin-top: 8px; font-weight: 600; }
 .feedback.ok { color: var(--ok); }

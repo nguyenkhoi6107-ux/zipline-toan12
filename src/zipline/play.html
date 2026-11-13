@@ -31,14 +31,30 @@
           </div>
 
           <div class="part" id="partA">
-            <p><b>a)</b> Cho <span class="pA" id="qA"></span> và <span class="pB" id="qB"></span>.
+            <p id="qPromptA"><b>a)</b> Cho <span class="pA" id="qA"></span> và <span class="pB" id="qB"></span>.
               Viết phương trình tham số của đường thẳng AB.</p>
-            <div class="eq">
+            <div class="eq" id="eqParametric">
               <div class="brace">{</div>
               <div class="rows">
                 <div class="row"><span class="var">x =</span><input type="text" data-p="0" aria-label="x0" autocomplete="off"><span>+</span><input type="text" data-d="0" aria-label="a1" autocomplete="off"><span>t</span></div>
                 <div class="row"><span class="var">y =</span><input type="text" data-p="1" aria-label="y0" autocomplete="off"><span>+</span><input type="text" data-d="1" aria-label="a2" autocomplete="off"><span>t</span></div>
                 <div class="row"><span class="var">z =</span><input type="text" data-p="2" aria-label="z0" autocomplete="off"><span>+</span><input type="text" data-d="2" aria-label="a3" autocomplete="off"><span>t</span></div>
+              </div>
+            </div>
+            <div class="eq-canon hidden" id="eqCanonical">
+              <div class="frac">
+                <div class="num"><span>x −</span><input type="text" data-cp="0" aria-label="x0" autocomplete="off"></div>
+                <div class="den"><input type="text" data-cd="0" aria-label="a1" autocomplete="off"></div>
+              </div>
+              <span class="eq-sign">=</span>
+              <div class="frac">
+                <div class="num"><span>y −</span><input type="text" data-cp="1" aria-label="y0" autocomplete="off"></div>
+                <div class="den"><input type="text" data-cd="1" aria-label="a2" autocomplete="off"></div>
+              </div>
+              <span class="eq-sign">=</span>
+              <div class="frac">
+                <div class="num"><span>z −</span><input type="text" data-cp="2" aria-label="z0" autocomplete="off"></div>
+                <div class="den"><input type="text" data-cd="2" aria-label="a3" autocomplete="off"></div>
               </div>
             </div>
             <div class="actions">
@@ -48,7 +64,7 @@
           </div>
 
           <div class="part locked" id="partB">
-            <p><b>b)</b> Điểm <span class="pM" id="qM"></span> thuộc đường thẳng AB. Dùng phương trình vừa viết, tìm <b id="qAskLabel">cao độ z</b> của M.</p>
+            <p><b>b)</b> Điểm <span class="pM" id="qM"></span> thuộc đường thẳng <span id="qLineName">AB</span>. Dùng phương trình vừa viết, tìm <b id="qAskLabel">cao độ z</b> của M.</p>
             <div class="zrow">
               <span id="qAskVar">z =</span><input type="text" id="zIn" aria-label="Tọa độ cần tìm của M" autocomplete="off">
               <button class="btn primary" id="btnB">🏗️ Dựng cột</button>

@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  parseRational, ratEq, rat, gradeLine, gradeZ, generateLevel, generateRun, makeRng,
+  parseRational, ratEq, rat, gradeLine, gradeZ, generateLevel, generateRun, makeRng, QUESTION_TYPES,
 } from '../../src/zipline/js/math.js';
 
 const L = { A: [1, 2, 3], B: [3, 6, 7], M: [2, 4, 5], AB: [2, 4, 4] }; // ví dụ trong tài liệu
@@ -118,4 +118,59 @@ test('sinh đề: cùng hạt giống thì cùng đề, khác hạt giống thì
   assert.deepEqual(generateRun(42), generateRun(42));
   assert.notDeepEqual(generateRun(42), generateRun(43));
   assert.equal(generateRun(1, 8).length, 8);
+});
+
+test('chấm phương trình chính tắc: từ chối mẫu số bằng 0', () => {
+  const Lcanon = { ...L, eqForm: 'canonical' };
+  assert.equal(gradeLine(Lcanon, ans([1, 2, 3], [1, 2, 2])).correct, true);
+  const L0 = { A: [1, 2, 3], B: [1, 6, 7], M: [1, 4, 5], eqForm: 'canonical' };
+  const g = gradeLine(L0, ans([1, 2, 3], [0, 4, 4]));
+  assert.equal(g.correct, false);
+  assert.equal(g.reason, 'zero_canonical_dir');
+});
+
+test('sinh đề 4 dạng câu hỏi: bất biến toán học và chấm đúng', () => {
+  const rng = makeRng(999);
+  for (const qType of QUESTION_TYPES) {
+    for (let i = 0; i < 100; i++) {
+      const lv = generateLevel(rng, i % 8, 8, null, null, qType);
+      assert.equal(lv.questionType, qType);
+      if (lv.eqForm === 'canonical') {
+        assert.ok(lv.AB.every((c) => c !== 0), 'chính tắc không được có thành phần chỉ phương bằng 0');
+      }
+      if (qType === 'parallel_line') {
+        assert.equal(lv.hideB, true);
+        assert.ok(Array.isArray(lv.parallelDir));
+        assert.equal(gradeLine(lv, ans(lv.A, lv.parallelDir)).correct, true);
+      }
+      if (qType === 'plane_normal') {
+        assert.equal(lv.hideB, true);
+        const dot = lv.AB.reduce((s, c, k) => s + c * lv.planeNormal[k], 0);
+        assert.equal(dot, 0, 'AB phải vuông góc với vectơ pháp tuyến mặt phẳng');
+        assert.notEqual(lv.planeNormal[lv.missingIdx], 0, 'thành phần pháp tuyến ứng với m phải khác 0');
+        assert.equal(lv.dirTemplate[lv.missingIdx], null);
+        // Giải m từ u · n = 0 và kiểm tra gradeLine
+        const n = lv.planeNormal;
+        const tpl = lv.dirTemplate;
+        const knownDot = tpl.reduce((s, v, k) => s + (v === null ? 0 : v * n[k]), 0);
+        const solvedM = -knownDot / n[lv.missingIdx];
+        assert.ok(Number.isInteger(solvedM));
+        const solvedDir = tpl.map((v) => (v === null ? solvedM : v));
+        assert.equal(gradeLine(lv, ans(lv.A, solvedDir)).correct, true);
+      }
+      assert.equal(gradeLine(lv, ans(lv.A, lv.AB)).correct, true);
+      assert.equal(gradeZ(lv, String(lv.M[lv.askIndex])).correct, true);
+    }
+  }
+});
+
+test('generateRun: phủ đủ 4 dạng câu hỏi và không lặp lại liên tiếp', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const run = generateRun(seed, 8);
+    const types = run.map((lv) => lv.questionType);
+    assert.equal(new Set(types).size, 4, '8 màn phải có đủ cả 4 dạng câu hỏi');
+    for (let i = 1; i < types.length; i++) {
+      assert.notEqual(types[i], types[i - 1], '2 màn liên tiếp không trùng dạng câu hỏi');
+    }
+  }
 });
