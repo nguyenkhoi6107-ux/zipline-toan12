@@ -73,7 +73,10 @@ export class View3D {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const W = r.width, H = r.height;
     g.clearRect(0, 0, W, H);
-    g.fillStyle = '#0c1130';
+    const bg = g.createRadialGradient(W * 0.5, H * 0.35, 10, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
+    bg.addColorStop(0, '#1e1145');
+    bg.addColorStop(1, '#0b061d');
+    g.fillStyle = bg;
     g.fillRect(0, 0, W, H);
     const d = this.data;
     if (!d) return;

@@ -265,59 +265,96 @@ export class Scene {
     const g = c.getContext('2d');
     g.scale(dpr, dpr);
     const sky = g.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#070b24');
-    sky.addColorStop(0.6, '#18204a');
-    sky.addColorStop(1, '#0a0d22');
+    sky.addColorStop(0, '#090318');
+    sky.addColorStop(0.35, '#1d082b');
+    sky.addColorStop(0.7, '#421238');
+    sky.addColorStop(1, '#130728');
     g.fillStyle = sky;
     g.fillRect(0, 0, W, H);
 
     const rnd = seeded(7);
     for (let i = 0; i < 120; i++) {
-      g.globalAlpha = 0.3 + rnd() * 0.7;
-      g.fillStyle = '#fff';
-      const s = rnd() * 1.4 + 0.3;
-      g.fillRect(rnd() * W, rnd() * H * 0.6, s, s);
+      g.globalAlpha = 0.25 + rnd() * 0.7;
+      g.fillStyle = '#ffeef8';
+      const s = rnd() * 1.5 + 0.3;
+      g.fillRect(rnd() * W, rnd() * H * 0.65, s, s);
     }
     g.globalAlpha = 1;
 
-    // Trăng tròn
-    const mx = W * 0.86;
-    const my = H * 0.17;
-    const mr = Math.min(W, H) * 0.08;
-    const glow = g.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 4);
-    glow.addColorStop(0, 'rgba(255,240,200,0.45)');
-    glow.addColorStop(1, 'rgba(255,240,200,0)');
+    // Trăng máu rực rỡ phía trên đỉnh núi tuyết
+    const mx = W * 0.85;
+    const my = H * 0.19;
+    const mr = Math.min(W, H) * 0.11;
+    const glow = g.createRadialGradient(mx, my, mr * 0.4, mx, my, mr * 3.8);
+    glow.addColorStop(0, 'rgba(235, 38, 70, 0.52)');
+    glow.addColorStop(0.5, 'rgba(180, 18, 48, 0.22)');
+    glow.addColorStop(1, 'rgba(120, 10, 35, 0)');
     g.fillStyle = glow;
     g.fillRect(0, 0, W, H);
-    g.fillStyle = '#fff4d6';
+    const moonGrad = g.createRadialGradient(mx - mr * 0.25, my - mr * 0.25, mr * 0.1, mx, my, mr);
+    moonGrad.addColorStop(0, '#ff9c78');
+    moonGrad.addColorStop(0.55, '#d11d3a');
+    moonGrad.addColorStop(1, '#68071a');
+    g.fillStyle = moonGrad;
     g.beginPath(); g.arc(mx, my, mr, 0, Math.PI * 2); g.fill();
-    g.fillStyle = 'rgba(200,190,160,0.35)';
-    g.beginPath(); g.arc(mx - mr * 0.3, my - mr * 0.2, mr * 0.22, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.arc(mx + mr * 0.35, my + mr * 0.3, mr * 0.15, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(75, 4, 18, 0.38)';
+    g.beginPath(); g.arc(mx - mr * 0.28, my - mr * 0.18, mr * 0.22, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(mx + mr * 0.34, my + mr * 0.26, mr * 0.15, 0, Math.PI * 2); g.fill();
 
-    // Dãy núi xa (2 lớp)
-    const ridge = (baseY, amp, color, seed) => {
-      const r = seeded(seed);
-      g.fillStyle = color;
+    // Dãy núi tuyết tím hồng phía xa (đồng bộ với Landing Page)
+    const drawPeaks = (peaks, fill, snowFill) => {
+      g.fillStyle = fill;
       g.beginPath();
       g.moveTo(0, H);
-      let y = baseY;
-      for (let x = 0; x <= W + 20; x += 20) {
-        y = clamp(y + (r() - 0.5) * amp, baseY - amp * 2, baseY + amp);
-        g.lineTo(x, y);
-      }
+      for (const [px, py] of peaks) g.lineTo(px * W, py * H);
       g.lineTo(W, H);
+      g.closePath();
       g.fill();
+      if (snowFill) {
+        g.fillStyle = snowFill;
+        for (let i = 1; i < peaks.length - 1; i += 2) {
+          const [px, py] = peaks[i];
+          g.beginPath();
+          g.moveTo(px * W, py * H);
+          g.lineTo((px - 0.055) * W, (py + 0.12) * H);
+          g.lineTo(px * W, (py + 0.08) * H);
+          g.lineTo((px + 0.055) * W, (py + 0.12) * H);
+          g.closePath();
+          g.fill();
+        }
+      }
     };
-    ridge(H * 0.45, H * 0.06, '#1a2350', 3);
-    ridge(H * 0.55, H * 0.05, '#121838', 11);
+    drawPeaks(
+      [[0, 0.56], [0.16, 0.28], [0.33, 0.54], [0.52, 0.21], [0.71, 0.52], [0.89, 0.31], [1, 0.52]],
+      '#392168',
+      'rgba(244, 236, 255, 0.72)',
+    );
+    drawPeaks(
+      [[0, 0.64], [0.11, 0.48], [0.27, 0.62], [0.44, 0.44], [0.62, 0.60], [0.79, 0.46], [1, 0.62]],
+      '#221147',
+      null,
+    );
 
-    // Sương dưới vực
-    const mist = g.createLinearGradient(0, H * 0.7, 0, H);
-    mist.addColorStop(0, 'rgba(120,140,200,0)');
-    mist.addColorStop(1, 'rgba(120,140,200,0.18)');
+    // Hàng thông phủ tuyết dọc chân núi
+    for (let i = 0; i < 34; i++) {
+      const tx = (i / 33) * W;
+      const th = 22 + (i * 13) % 18;
+      const ty = H * 0.63 + Math.sin(i * 0.8) * 6;
+      g.fillStyle = i % 2 === 0 ? '#160a30' : '#110726';
+      g.beginPath();
+      g.moveTo(tx, ty - th);
+      g.lineTo(tx - th * 0.38, ty + 8);
+      g.lineTo(tx + th * 0.38, ty + 8);
+      g.closePath();
+      g.fill();
+    }
+
+    // Sương tím hồng dưới đáy vực
+    const mist = g.createLinearGradient(0, H * 0.65, 0, H);
+    mist.addColorStop(0, 'rgba(180, 120, 210, 0)');
+    mist.addColorStop(1, 'rgba(195, 130, 215, 0.24)');
     g.fillStyle = mist;
-    g.fillRect(0, H * 0.7, W, H * 0.3);
+    g.fillRect(0, H * 0.65, W, H * 0.35);
     return c;
   }
 
@@ -326,7 +363,7 @@ export class Scene {
     const top = side === 'left' ? L.gA : L.gB;
     const edge = side === 'left' ? L.xA + W * 0.06 : L.xB - W * 0.06;
     const r = seeded(side === 'left' ? 5 : 9);
-    g.fillStyle = '#0d1024';
+    g.fillStyle = '#140a2e';
     g.beginPath();
     if (side === 'left') {
       g.moveTo(0, H); g.lineTo(0, top); g.lineTo(edge, top);
@@ -339,9 +376,10 @@ export class Scene {
     }
     g.closePath();
     g.fill();
-    // Viền cỏ ánh trăng
-    g.strokeStyle = '#3f5a8a';
-    g.lineWidth = 3;
+    // Lớp tuyết trắng phủ dày trên mép vách đá
+    g.strokeStyle = '#f3ecff';
+    g.lineWidth = 5;
+    g.lineCap = 'round';
     g.beginPath();
     if (side === 'left') { g.moveTo(0, top); g.lineTo(edge, top); } else { g.moveTo(edge, top); g.lineTo(W, top); }
     g.stroke();

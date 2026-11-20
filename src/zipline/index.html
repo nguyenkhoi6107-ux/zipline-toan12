@@ -3,93 +3,150 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Zip Line Thoát Hồ Ly – Phương trình đường thẳng (Toán 12)</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Foxy Running · Đêm trăng máu trên núi tuyết</title>
+  <meta name="description" content="Foxy Running: thoát khỏi hồ ly bằng phương trình đường thẳng trong không gian Oxyz. Game Toán 12.">
+  <meta name="theme-color" content="#0b0720">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cinzel+Decorative:wght@700;900&family=Grenze+Gotisch:wght@500;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=%E7%8B%90&display=block">
+  <link rel="stylesheet" href="css/landing.css?v=2">
 </head>
-<body>
-  <div class="home">
-    <div class="hero">
-      <h1>🌕 Zip Line Thoát Hồ Ly</h1>
-      <div class="muted">Phương trình đường thẳng trong không gian Oxyz · Toán 12</div>
-      <div class="chars"><canvas id="heroStudent"></canvas><canvas id="heroFox"></canvas></div>
-      <p class="story">Đêm trăng tròn, nhóm bạn cắm trại trên đỉnh núi thì phát hiện con hồ ly giả dạng người.
-        Hồ ly đuổi theo! Viết đúng <b>phương trình đường thẳng AB</b> để bắn dây zip line sang vách bên kia,
-        tìm đúng <b>cao độ z của điểm M</b> để dựng cột đỡ giữa dây, rồi đu qua vực mà thoát thân.</p>
-    </div>
+<body class="lp is-loading">
+  <!-- Bộ lọc "ma ám" cho tên game: nhiễu loạn làm chữ run rẩy như khói -->
+  <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="haunt" x="-10%" y="-20%" width="120%" height="140%">
+      <feTurbulence id="hauntNoise" type="fractalNoise" baseFrequency="0.012 0.06" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap id="hauntDisp" in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
 
-    <div class="grid">
-      <div class="card">
-        <h2>🎒 Học sinh vào phòng</h2>
-        <form id="joinForm" autocomplete="off">
-          <label>Mã phòng
-            <input id="code" class="code-input" type="text" inputmode="numeric" maxlength="4" placeholder="0000" required>
-          </label>
-          <label>Tên của em
-            <input id="name" type="text" maxlength="20" placeholder="Ví dụ: Lan 12A1" required>
-          </label>
-          <div class="error" id="joinErr"></div>
-          <button class="btn primary big" type="submit">Vào phòng</button>
-        </form>
+  <a class="skip" href="#gate" data-jump="gate">Bỏ qua câu chuyện, vào trò chơi</a>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" data-jump="top" aria-label="Foxy Running, về đầu trang">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 5l7 7h10l7-7-2 13-10 10L6 18z" fill="currentColor"/><circle cx="12" cy="17" r="1.6" fill="#0b0720"/><circle cx="20" cy="17" r="1.6" fill="#0b0720"/></svg>
+      <span>Foxy Running</span>
+    </a>
+    <nav class="nav-links" aria-label="Chính">
+      <a href="#story" data-jump="story">Câu chuyện</a>
+      <a href="play.html?mode=solo">Luyện tập</a>
+      <a href="teacher.html" class="js-teacher">Giáo viên</a>
+    </nav>
+    <a class="btn btn-ghost nav-cta" href="#gate" data-jump="gate">Chơi ngay</a>
+  </header>
+
+  <main id="top">
+    <div class="film" id="film">
+      <div class="stage" id="stage">
+        <div class="shake" id="shake">
+          <div class="sky"></div>
+          <div class="sky sky-blood" id="skyBlood"></div>
+          <canvas class="stars" id="stars" aria-hidden="true"></canvas>
+          <div class="shooting" aria-hidden="true"></div>
+          <div class="moon" id="moon" aria-hidden="true"><div class="moon-blood" id="moonBlood"></div></div>
+
+          <div class="layer" id="L-far" aria-hidden="true"></div>
+          <div class="layer" id="L-mid" aria-hidden="true"></div>
+          <div class="mist mist-back" id="mistBack" aria-hidden="true"></div>
+          <div class="layer" id="L-forest" aria-hidden="true"></div>
+          <div class="layer" id="L-ground" aria-hidden="true"></div>
+
+          <div class="actors" id="actors" aria-hidden="true">
+            <div class="campers-happy" id="campersHappy"></div>
+            <img class="actor fox" id="foxFront" alt="">
+            <img class="actor st" id="st0" alt="">
+            <img class="actor st" id="st1" alt="">
+            <img class="actor st" id="st2" alt="">
+            <img class="actor fox" id="foxRun" alt="">
+          </div>
+
+          <div class="layer" id="L-front" aria-hidden="true"></div>
+          <div class="mist mist-front" id="mistFront" aria-hidden="true"></div>
+          <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+          <div class="blood-tint" id="bloodTint" aria-hidden="true"></div>
+          <div class="flash" id="flash" aria-hidden="true"></div>
+          <div class="vignette" aria-hidden="true"></div>
+          <div class="grain" aria-hidden="true"></div>
+        </div>
+
+        <!-- HERO: tên game -->
+        <div class="title-wrap" id="titleWrap">
+          <span class="kanji" id="kanji" aria-hidden="true">狐</span>
+          <h1 class="title" id="title" aria-label="Foxy Running">
+            <span class="t-line t-foxy" aria-hidden="true"><span class="ch">F</span><span class="ch o">O<i class="slit"></i></span><span class="ch">X</span><span class="ch">Y</span></span>
+            <span class="t-line t-run" aria-hidden="true"><span class="ch">R</span><span class="ch">U</span><span class="ch">N</span><span class="ch">N</span><span class="ch">I</span><span class="ch">N</span><span class="ch">G</span></span>
+          </h1>
+          <p class="tagline" id="tagline">Đêm trăng máu. Hồ ly đang ở giữa chúng ta.</p>
+          <div class="hero-actions" id="heroActions">
+            <a class="btn btn-blood" href="#gate" data-jump="gate">Chơi ngay</a>
+            <span class="hero-note">Game Toán 12 · Phương trình đường thẳng Oxyz</span>
+          </div>
+        </div>
+
+        <!-- CÂU CHUYỆN -->
+        <section class="cap cap-joy" id="story" aria-label="Chương 1">
+          <h2>Đêm trăng trên núi tuyết</h2>
+          <p>Lều đã dựng, lửa đã nhóm. Cả nhóm hát hò, nướng kẹo dẻo, quên cả cái lạnh của đỉnh núi.</p>
+        </section>
+
+        <section class="cap cap-turn" aria-label="Chương 2">
+          <p class="k-line k1">Rồi trăng hóa đỏ.</p>
+          <p class="k-line k2">Bóng một người bạn in lên vách lều. Có tai. Có đuôi.</p>
+          <p class="k-line k3">Hồ ly đã ở ngay giữa các em.</p>
+        </section>
+
+        <section class="cap cap-run" aria-label="Chương 3">
+          <h2>Chạy!</h2>
+          <p>Băng qua rừng thông, đừng ngoái lại. Tiếng bước chân phía sau mỗi lúc một gần.</p>
+        </section>
+
+        <!-- KHU VỰC TRÒ CHƠI -->
+        <section class="gate" id="gate" aria-labelledby="gateTitle" inert>
+          <p class="gate-kicker">Vách núi cuối cùng</p>
+          <h2 id="gateTitle">Bắn dây sang bờ bên kia</h2>
+          <p class="gate-lead">Viết đúng phương trình đường thẳng AB để căng dây zip line. Sai một con số, hồ ly sẽ bắt kịp.</p>
+
+          <div class="gate-cards">
+            <a class="gcard gcard-host js-teacher" href="teacher.html">
+              <span class="gicon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <span class="gtext">
+                <span class="gtitle">Tạo phòng chơi</span>
+                <span class="gdesc">Mã phòng 4 số, cả lớp cùng chạy, bảng xếp hạng sống.</span>
+              </span>
+              <span class="garrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+            </a>
+            <a class="gcard gcard-solo" href="play.html?mode=solo">
+              <span class="gicon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>
+              </span>
+              <span class="gtext">
+                <span class="gtitle">Luyện tập</span>
+                <span class="gdesc">Chạy thử 8 màn một mình, không cần phòng, không xếp hạng.</span>
+              </span>
+              <span class="garrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+            </a>
+          </div>
+
+          <form class="join" id="joinForm" autocomplete="off" novalidate>
+            <span class="join-label" id="joinLabel">Đã có mã phòng?</span>
+            <label class="sr" for="code">Mã phòng</label>
+            <input id="code" class="join-code" type="text" inputmode="numeric" maxlength="4" placeholder="0000" aria-describedby="joinLabel joinErr">
+            <label class="sr" for="name">Tên của em</label>
+            <input id="name" class="join-name" type="text" maxlength="20" placeholder="Tên của em">
+            <button class="btn btn-small" type="submit">Vào</button>
+          </form>
+          <p class="join-err" id="joinErr" role="alert"></p>
+          <p class="mode-note" id="modeNote"></p>
+        </section>
+
+        <div class="progress" aria-hidden="true"><i id="progress"></i></div>
       </div>
-
-      <div class="card">
-        <h2>🧑‍🏫 Giáo viên</h2>
-        <p class="muted">Tạo phòng có mã 4 số, xem danh sách vào phòng, bấm Bắt đầu và chiếu bảng xếp hạng sống.</p>
-        <p><a class="btn big" id="teacherLink" href="teacher.html">Tạo phòng chơi</a></p>
-        <hr style="border-color: var(--line)">
-        <h2>🏃 Luyện tập một mình</h2>
-        <p class="muted">Chơi thử 8 màn, không cần phòng, không xếp hạng.</p>
-        <p><a class="btn big" id="soloLink" href="play.html?mode=solo">Chơi luyện tập</a></p>
-      </div>
     </div>
-    <p class="muted small" id="modeNote" style="text-align:center;margin-top:18px"></p>
-  </div>
+  </main>
 
-  <script type="module">
-    import { getBackend } from './js/net.js';
-    import { loadSprites } from './js/sprites.js';
-
-    const qs = new URLSearchParams(location.search);
-    const keep = qs.has('local') ? '&local=1' : '';
-    document.getElementById('teacherLink').href = 'teacher.html' + (keep ? '?local=1' : '');
-    document.getElementById('soloLink').href = 'play.html?mode=solo';
-    if (qs.get('room')) document.getElementById('code').value = qs.get('room');
-
-    loadSprites().then(({ student, fox }) => {
-      for (const [id, img] of [['heroStudent', student], ['heroFox', fox]]) {
-        if (!img) continue;
-        const c = document.getElementById(id);
-        c.height = 260; c.width = Math.round(260 * img.width / img.height);
-        c.style.height = '130px';
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      }
-    });
-
-    const backendP = getBackend();
-    backendP.then((b) => {
-      document.getElementById('modeNote').textContent = b.kind === 'local'
-        ? 'Đang ở chế độ THỬ CỤC BỘ (chưa cấu hình Firebase): phòng chỉ hoạt động giữa các tab trên cùng trình duyệt này.'
-        : 'Đã kết nối Firebase.';
-    });
-
-    document.getElementById('joinForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const code = document.getElementById('code').value.trim();
-      const name = document.getElementById('name').value.trim().slice(0, 20);
-      const err = document.getElementById('joinErr');
-      if (!/^\d{4}$/.test(code)) { err.textContent = 'Mã phòng gồm 4 chữ số.'; return; }
-      if (!name) { err.textContent = 'Em nhập tên nhé.'; return; }
-      err.textContent = 'Đang kiểm tra phòng…';
-      try {
-        const b = await backendP;
-        if (!(await b.roomExists(code))) { err.textContent = 'Không tìm thấy phòng ' + code + '.'; return; }
-        sessionStorage.setItem('zipline:name:' + code, name);
-        if (b.kind !== 'local') localStorage.setItem('zipline:name:' + code, name);
-        location.href = `play.html?room=${code}${keep}`;
-      } catch (ex) {
-        err.textContent = 'Lỗi kết nối: ' + ex.message;
-      }
-    });
-  </script>
+  <script type="module" src="js/landing.js?v=2"></script>
 </body>
 </html>

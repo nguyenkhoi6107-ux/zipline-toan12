@@ -3,85 +3,165 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Zip Line Thoát Hồ Ly – Màn chơi</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Foxy Running · Vách núi Zip Line (Toán 12)</title>
+  <meta name="theme-color" content="#0b0720">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cinzel+Decorative:wght@700;900&family=Grenze+Gotisch:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=%E7%8B%90&display=block">
+  <link rel="stylesheet" href="css/style.css?v=2">
 </head>
-<body>
-  <div class="play">
+<body class="page-play">
+  <!-- Bầu trời đêm trăng máu, dãy núi tuyết & rừng thông đồng bộ với Landing Page -->
+  <div class="world-backdrop" aria-hidden="true">
+    <div class="wb-moon"></div>
+    <svg class="wb-mountains" viewBox="0 0 1920 540" preserveAspectRatio="none">
+      <polygon points="0,540 240,180 540,540" fill="#2a1655"/>
+      <polygon points="240,180 175,275 240,255 305,275" fill="#ede4ff" opacity="0.55"/>
+      <polygon points="380,540 820,95 1260,540" fill="#341c66"/>
+      <polygon points="820,95 720,235 820,205 920,235" fill="#f3ecff" opacity="0.6"/>
+      <polygon points="1080,540 1520,145 1960,540" fill="#281452"/>
+      <polygon points="1520,145 1435,260 1520,235 1605,260" fill="#ede4ff" opacity="0.5"/>
+      <path d="M0,540 L0,430 Q480,390 960,435 T1920,420 L1920,540 Z" fill="#120829"/>
+    </svg>
+    <div class="wb-fx-ring"></div>
+  </div>
+
+  <div class="play" id="playRoot">
     <div id="banner" class="banner hidden"></div>
+
+    <!-- HUD Game chuyên nghiệp -->
     <header class="hud">
-      <div class="lives" id="lives" title="Số mạng"></div>
-      <div class="progress" id="progress" title="Tiến độ các màn"></div>
-      <div class="timer" id="timer">--:--</div>
-      <div class="foxbar" id="foxbar">
-        <span>🦊 Hồ ly</span>
-        <div class="bar"><div id="foxFill" style="width:70%"></div></div>
-        <span class="dist" id="foxDist">100 m</span>
+      <a class="hud-brand" id="homeLink" href="index.html" title="Về trang chủ Foxy Running">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 5l7 7h10l7-7-2 13-10 10L6 18z" fill="currentColor"/><circle cx="12" cy="17" r="1.6" fill="#0b0720"/><circle cx="20" cy="17" r="1.6" fill="#0b0720"/></svg>
+        <span class="brand-name">Foxy Running</span>
+      </a>
+
+      <div class="hud-center">
+        <div class="foxbar" id="foxbar">
+          <span class="fox-tag">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l5 5h6l5-5-1.5 10L12 21 5.5 14z" fill="currentColor"/></svg>
+            <span>Hồ ly truy đuổi</span>
+          </span>
+          <div class="bar"><div id="foxFill" style="width:70%"></div></div>
+          <span class="dist" id="foxDist">100 m</span>
+        </div>
+        <div class="progress" id="progress" title="Tiến độ 8 vách núi"></div>
+      </div>
+
+      <div class="hud-right">
+        <div class="lives" id="lives" title="Số mạng"></div>
+        <div class="timer" id="timer">--:--</div>
       </div>
     </header>
 
     <main class="layout">
       <section class="stage-col">
-        <canvas id="scene"></canvas>
+        <!-- Khung cảnh vách núi 2D + băng rôn kể chuyện tổng thể theo từng màn -->
+        <div class="stage-frame" id="stageFrame">
+          <div class="story-strip" id="storyStrip">
+            <span class="story-act" id="storyAct">Chương I · Vách Tuyết Đầu Tiên</span>
+            <span class="story-beat" id="storyBeat">Hồ ly đã lao ra khỏi lều! Bắn dây cáp qua khe vực trước khi nó bắt kịp.</span>
+          </div>
+          <canvas id="scene"></canvas>
+        </div>
 
-        <div class="card">
+        <!-- Khu vực câu hỏi: hiển thị TUẦN TỰ từng bước để không rối mắt -->
+        <div class="card quest-card" id="questCard">
           <div class="q-head">
-            <span class="lv">Màn <span id="lvNum">1</span>/<span id="lvTotal">8</span></span>
+            <div class="q-title-wrap">
+              <span class="lv-pill">Vách núi <span id="lvNum">1</span>/<span id="lvTotal">8</span></span>
+              <div class="step-pills" aria-label="Tiến trình câu hỏi trong màn">
+                <span class="step-pill is-active" id="stepPillA"><i>1</i> Bắn dây cáp</span>
+                <span class="step-arrow" aria-hidden="true">→</span>
+                <span class="step-pill" id="stepPillB"><i>2</i> Dựng trụ đỡ M</span>
+              </div>
+            </div>
             <span class="muted small" id="who"></span>
           </div>
 
-          <div class="part" id="partA">
-            <p id="qPromptA"><b>a)</b> Cho <span class="pA" id="qA"></span> và <span class="pB" id="qB"></span>.
-              Viết phương trình tham số của đường thẳng AB.</p>
-            <div class="eq" id="eqParametric">
-              <div class="brace">{</div>
-              <div class="rows">
-                <div class="row"><span class="var">x =</span><input type="text" data-p="0" aria-label="x0" autocomplete="off"><span>+</span><input type="text" data-d="0" aria-label="a1" autocomplete="off"><span>t</span></div>
-                <div class="row"><span class="var">y =</span><input type="text" data-p="1" aria-label="y0" autocomplete="off"><span>+</span><input type="text" data-d="1" aria-label="a2" autocomplete="off"><span>t</span></div>
-                <div class="row"><span class="var">z =</span><input type="text" data-p="2" aria-label="z0" autocomplete="off"><span>+</span><input type="text" data-d="2" aria-label="a3" autocomplete="off"><span>t</span></div>
-              </div>
+          <!-- BƯỚC 1: Phương trình đường thẳng (câu a) -->
+          <div class="part is-current" id="partA">
+            <div class="solved-summary" id="solvedSummaryA" aria-live="polite">
+              <span class="solved-badge">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Bước 1 hoàn tất · Dây cáp đã găm trúng vách B
+              </span>
+              <span class="solved-eq" id="solvedEqText"></span>
             </div>
-            <div class="eq-canon hidden" id="eqCanonical">
-              <div class="frac">
-                <div class="num"><span>x −</span><input type="text" data-cp="0" aria-label="x0" autocomplete="off"></div>
-                <div class="den"><input type="text" data-cd="0" aria-label="a1" autocomplete="off"></div>
+
+            <div class="part-body">
+              <p class="q-prompt" id="qPromptA"><b>Bước 1.</b> Cho <span class="pA" id="qA"></span> và <span class="pB" id="qB"></span>.
+                Viết phương trình tham số của đường thẳng AB.</p>
+
+              <div class="eq" id="eqParametric">
+                <div class="brace" aria-hidden="true">{</div>
+                <div class="rows">
+                  <div class="row"><span class="var">x =</span><input type="text" data-p="0" aria-label="x0" placeholder="x₀" autocomplete="off"><span>+</span><input type="text" data-d="0" aria-label="a1" placeholder="a₁" autocomplete="off"><span class="t-var">t</span></div>
+                  <div class="row"><span class="var">y =</span><input type="text" data-p="1" aria-label="y0" placeholder="y₀" autocomplete="off"><span>+</span><input type="text" data-d="1" aria-label="a2" placeholder="a₂" autocomplete="off"><span class="t-var">t</span></div>
+                  <div class="row"><span class="var">z =</span><input type="text" data-p="2" aria-label="z0" placeholder="z₀" autocomplete="off"><span>+</span><input type="text" data-d="2" aria-label="a3" placeholder="a₃" autocomplete="off"><span class="t-var">t</span></div>
+                </div>
               </div>
-              <span class="eq-sign">=</span>
-              <div class="frac">
-                <div class="num"><span>y −</span><input type="text" data-cp="1" aria-label="y0" autocomplete="off"></div>
-                <div class="den"><input type="text" data-cd="1" aria-label="a2" autocomplete="off"></div>
+
+              <div class="eq-canon hidden" id="eqCanonical">
+                <div class="frac">
+                  <div class="num"><span>x −</span><input type="text" data-cp="0" aria-label="x0" placeholder="x₀" autocomplete="off"></div>
+                  <div class="den"><input type="text" data-cd="0" aria-label="a1" placeholder="a₁" autocomplete="off"></div>
+                </div>
+                <span class="eq-sign">=</span>
+                <div class="frac">
+                  <div class="num"><span>y −</span><input type="text" data-cp="1" aria-label="y0" placeholder="y₀" autocomplete="off"></div>
+                  <div class="den"><input type="text" data-cd="1" aria-label="a2" placeholder="a₂" autocomplete="off"></div>
+                </div>
+                <span class="eq-sign">=</span>
+                <div class="frac">
+                  <div class="num"><span>z −</span><input type="text" data-cp="2" aria-label="z0" placeholder="z₀" autocomplete="off"></div>
+                  <div class="den"><input type="text" data-cd="2" aria-label="a3" placeholder="a₃" autocomplete="off"></div>
+                </div>
               </div>
-              <span class="eq-sign">=</span>
-              <div class="frac">
-                <div class="num"><span>z −</span><input type="text" data-cp="2" aria-label="z0" autocomplete="off"></div>
-                <div class="den"><input type="text" data-cd="2" aria-label="a3" autocomplete="off"></div>
+
+              <div class="actions">
+                <button class="btn primary" id="btnA" type="button">
+                  <svg class="btn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span>Bắn dây cáp</span>
+                </button>
+                <span class="muted small">Nhập số nguyên, phân số (<code>1/2</code>) hoặc thập phân (<code>2,5</code>). Nhấn <code>Enter</code> để qua ô kế.</span>
               </div>
-            </div>
-            <div class="actions">
-              <button class="btn primary" id="btnA">🪝 Bắn dây</button>
-              <span class="muted small">Nhận số nguyên, phân số (1/2), thập phân (2,5). Hệ số âm thì gõ dấu trừ, ví dụ −3.</span>
             </div>
           </div>
 
+          <!-- BƯỚC 2: Tìm tọa độ trụ đỡ M (câu b) — chỉ mở ra sau khi hoàn thành Bước 1 -->
           <div class="part locked" id="partB">
-            <p><b>b)</b> Điểm <span class="pM" id="qM"></span> thuộc đường thẳng <span id="qLineName">AB</span>. Dùng phương trình vừa viết, tìm <b id="qAskLabel">cao độ z</b> của M.</p>
-            <div class="zrow">
-              <span id="qAskVar">z =</span><input type="text" id="zIn" aria-label="Tọa độ cần tìm của M" autocomplete="off">
-              <button class="btn primary" id="btnB">🏗️ Dựng cột</button>
+            <div class="part-body">
+              <p class="q-prompt"><b>Bước 2.</b> Điểm <span class="pM" id="qM"></span> nằm trên dây cáp <span id="qLineName">AB</span>. Dùng phương trình vừa lập, tính <b id="qAskLabel">cao độ z</b> để dựng trụ đỡ M rồi trượt qua vực.</p>
+              <div class="zrow">
+                <span class="z-var" id="qAskVar">z =</span>
+                <input type="text" id="zIn" aria-label="Tọa độ cần tìm của M" placeholder="?" autocomplete="off">
+                <button class="btn primary" id="btnB" type="button">
+                  <svg class="btn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span>Dựng trụ &amp; Trượt</span>
+                </button>
+              </div>
             </div>
           </div>
-          <div class="feedback" id="feedback"></div>
+
+          <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
         </div>
       </section>
 
       <aside class="side-col">
-        <div class="card">
-          <h3>Hình 3D minh họa</h3>
+        <div class="card radar-card">
+          <div class="card-head">
+            <h3>La bàn không gian Oxyz</h3>
+            <span class="radar-tag">3D</span>
+          </div>
           <canvas id="view3d"></canvas>
-          <p class="cap" id="view3dCap">Hình hiện sau mỗi câu trả lời. Kéo để xoay.</p>
+          <p class="cap" id="view3dCap">Mô hình 3D xuất hiện sau mỗi lần bắn dây. Kéo chuột để xoay góc nhìn.</p>
         </div>
         <div class="card" id="boardCard">
-          <h3>Bảng xếp hạng</h3>
+          <div class="card-head">
+            <h3>Bảng xếp hạng trực tiếp</h3>
+          </div>
           <ol class="board board-list" id="board"></ol>
         </div>
       </aside>
@@ -91,6 +171,6 @@
       <div class="overlay-box card" id="overlayBox"></div>
     </div>
   </div>
-  <script type="module" src="js/play.js"></script>
+  <script type="module" src="js/play.js?v=2"></script>
 </body>
 </html>

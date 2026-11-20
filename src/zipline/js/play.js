@@ -10,18 +10,51 @@
  */
 import { generateRun, hashSeed, formatPoint } from './math.js';
 import { PlayerRun } from './game-core.js';
-import { Scene } from './scene.js';
-import { View3D } from './view3d.js';
+import { Scene } from './scene.js?v=2';
+import { View3D } from './view3d.js?v=2';
 import { loadSprites } from './sprites.js';
 import { getBackend, getPlayerId, SERVER_NOW } from './net.js';
 import { loadConfig, mergeSettings, fmtTime, el, renderBoard, playersOf } from './ui.js';
 import { rankPlayers } from './rank.js';
+import { initBloodMoonPortal, navigateWithBloodMoon } from './portal.js';
+
+initBloodMoonPortal();
 
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const roomCode = qs.get('room');
 const solo = !roomCode;
 const keepLocal = qs.has('local') ? '?local=1' : '';
+if ($('homeLink')) $('homeLink').href = 'index.html' + keepLocal;
+
+// Câu chuyện tổng thể trải dài qua 8 vách núi khi trốn chạy khỏi Hồ Ly
+const STORY_CHAPTERS = [
+  ['Chương I · Rời Bỏ Khu Lều Tuyết', 'Trăng máu vừa nhuộm đỏ đỉnh núi. Bắn sợi cáp đầu tiên qua khe vực ngay sát khu cắm trại!'],
+  ['Chương II · Hẻm Thông Đỏ', 'Tiếng cành thông gãy rắc phía sau. Hồ ly đang rút ngắn khoảng cách qua từng bước nhảy!'],
+  ['Chương III · Vách Đá Sương Mù', 'Sương lạnh phủ kín đáy vực. Chỉ một sai số về vectơ chỉ phương cũng khiến dây cáp lệch hướng.'],
+  ['Chương IV · Cầu Tuyết Gãy', 'Cây cầu gỗ cũ đã sập dưới chân. Hãy căng dây chính xác để vượt qua hố băng sâu thẳm.'],
+  ['Chương V · Đôi Mắt Trong Bóng Tối', 'Ánh mắt đỏ rực của Hồ Ly đã lấp ló ngay mỏm đá. Bình tĩnh xác định tọa độ điểm tựa M!'],
+  ['Chương VI · Vực Gió Hú', 'Gió bắc quật mạnh làm dây cáp rung bần bật. Dựng trụ đỡ M thật chuẩn để dây không đứt.'],
+  ['Chương VII · Mỏm Đá Trăng Máu', 'Chỉ còn hai khe vực nữa là tới trạm cứu hộ. Đừng để Hồ Ly vồ trúng ở chặng nước rút!'],
+  ['Chương VIII · Cú Trượt Cuối Cùng', 'Đèn trạm gác đã sáng phía bên kia vực! Hoàn thành đường cáp cuối để thoát khỏi Hồ Ly!'],
+];
+
+function triggerPageReaction(kind) {
+  document.body.classList.remove('fx-correct', 'fx-wrong');
+  void document.body.offsetWidth;
+  document.body.classList.add(kind === 'ok' ? 'fx-correct' : 'fx-wrong');
+  clearTimeout(triggerPageReaction._t);
+  triggerPageReaction._t = setTimeout(() => {
+    document.body.classList.remove('fx-correct', 'fx-wrong');
+  }, 820);
+}
+
+function formatSolvedEquation(lv, pVals, dVals) {
+  if (lv.eqForm === 'canonical') {
+    return `Chính tắc: (x − ${pVals[0]})/${dVals[0]} = (y − ${pVals[1]})/${dVals[1]} = (z − ${pVals[2]})/${dVals[2]}`;
+  }
+  return `Tham số: x = ${pVals[0]} + ${dVals[0]}t · y = ${pVals[1]} + ${dVals[1]}t · z = ${pVals[2]} + ${dVals[2]}t`;
+}
 
 const paramP = [0, 1, 2].map((i) => document.querySelector(`[data-p="${i}"]`));
 const paramD = [0, 1, 2].map((i) => document.querySelector(`[data-d="${i}"]`));
@@ -116,7 +149,7 @@ function setFeedback(text, kind = '') {
 function renderPromptA(lv) {
   const p = $('qPromptA');
   const formText = lv.eqForm === 'canonical' ? 'phương trình chính tắc' : 'phương trình tham số';
-  const b = el('b', '', 'a) ');
+  const b = el('b', '', 'Bước 1. ');
   if (lv.questionType === 'parallel_line') {
     p.replaceChildren(
       b,
@@ -158,6 +191,9 @@ function renderLevel() {
   const isCanon = lv.eqForm === 'canonical';
   $('lvNum').textContent = String(run.levelIndex + 1);
   $('lvTotal').textContent = String(run.totalLevels);
+  const story = STORY_CHAPTERS[run.levelIndex % STORY_CHAPTERS.length];
+  if ($('storyAct')) $('storyAct').textContent = story[0];
+  if ($('storyBeat')) $('storyBeat').textContent = story[1];
   renderPromptA(lv);
   $('eqParametric').classList.toggle('hidden', isCanon);
   $('eqCanonical').classList.toggle('hidden', !isCanon);
@@ -170,10 +206,12 @@ function renderLevel() {
   if (!inZ) {
     allParam.forEach((i) => { i.value = ''; });
     allCanon.forEach((i) => { i.value = ''; });
+    if ($('solvedEqText')) $('solvedEqText').textContent = '';
   } else if (all.every((i) => !i.value)) {
     // Khôi phục sau khi tải lại: điền lại một phương trình đúng.
     lv.A.forEach((v, i) => { p[i].value = String(v); });
     lv.AB.forEach((v, i) => { d[i].value = String(v); });
+    if ($('solvedEqText')) $('solvedEqText').textContent = formatSolvedEquation(lv, lv.A, lv.AB);
   }
   $('zIn').value = '';
   lockParts();
@@ -188,6 +226,13 @@ function lockParts() {
   $('partA').classList.toggle('locked', inZ || !playing);
   $('partA').classList.toggle('solved', inZ);
   $('partB').classList.toggle('locked', !inZ || !playing);
+  if ($('stepPillA')) {
+    $('stepPillA').classList.toggle('is-active', !inZ);
+    $('stepPillA').classList.toggle('is-done', inZ);
+  }
+  if ($('stepPillB')) {
+    $('stepPillB').classList.toggle('is-active', inZ);
+  }
   allParam.forEach((i) => { i.disabled = true; });
   allCanon.forEach((i) => { i.disabled = true; });
   all.forEach((i) => { i.disabled = inZ || busy || !playing; });
@@ -235,7 +280,11 @@ async function submitA() {
   const lineName = lv.hideB ? 'd' : 'AB';
   await withAnimation(async () => {
     if (res.correct) {
+      triggerPageReaction('ok');
       setFeedback(res.feedback, 'ok');
+      if ($('solvedEqText')) {
+        $('solvedEqText').textContent = formatSolvedEquation(lv, p.map((i) => i.value.trim()), d.map((i) => i.value.trim()));
+      }
       view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: lv.askIndex ?? 2, showZ: false, hideB: !!lv.hideB });
       $('view3dCap').textContent = `Đường thẳng của em trùng với ${lineName}. Điểm M thuộc ${lineName}, cần tìm ${lv.askLabel || 'cao độ z'}.`;
       await scene.shootRope();
@@ -243,6 +292,7 @@ async function submitA() {
       lockParts();
       $('zIn').focus({ preventScroll: true });
     } else {
+      triggerPageReaction('bad');
       setFeedback(res.feedback, 'bad');
       view.show({ A: lv.A, B: lv.B, M: null, wrongLine: { point: res.point, dir: res.dir }, hideB: !!lv.hideB });
       $('view3dCap').textContent = `Nét đỏ là đường thẳng em viết: nó không trùng với dây ${lineName}.`;
@@ -263,6 +313,7 @@ async function submitB() {
   const lineName = lv.hideB ? 'd' : 'AB';
   await withAnimation(async () => {
     if (res.correct) {
+      triggerPageReaction('ok');
       setFeedback(res.feedback, 'ok');
       view.show({ A: lv.A, B: lv.B, M: lv.M, askIndex: askIdx, showZ: true, hideB: !!lv.hideB });
       $('view3dCap').textContent = lv.hideB
@@ -279,6 +330,7 @@ async function submitB() {
         activeInputs().p[0].focus({ preventScroll: true });
       }
     } else {
+      triggerPageReaction('bad');
       setFeedback(res.feedback, 'bad');
       const wrongM = [...lv.M];
       wrongM[askIdx] = res.z;
@@ -476,9 +528,10 @@ if (solo) {
   newRun((Math.random() * 2 ** 32) >>> 0);
   renderLevel();
   overlay([
-    el('h2', '', '🌕 Luyện tập'),
-    el('p', '', `${settings.levels} màn · ${settings.timeLimitMinutes} phút · ${settings.lives} mạng. Hồ ly tiến dần theo thời gian, trả lời sai thì nó nhảy gần hơn.`),
-    button('Bắt đầu', () => { startAt = Date.now() + 3000; beginCountdown(); }),
+    el('h2', '', 'Trăng Máu Đã Lên · Luyện Tập'),
+    el('p', '', `Hồ ly đang lao ra từ khu lều tuyết! Em có ${settings.levels} vách núi để vượt qua trong ${settings.timeLimitMinutes} phút với ${settings.lives} mạng.`),
+    el('p', 'muted small', 'Mỗi vách núi gồm 2 bước tuần tự: (1) Viết phương trình đường thẳng để bắn dây cáp → (2) Tìm tọa độ điểm tựa M để dựng trụ đỡ.'),
+    button('Bắt đầu chạy trốn', () => { startAt = Date.now() + 3000; beginCountdown(); }),
   ]);
 } else {
   backend = await getBackend();

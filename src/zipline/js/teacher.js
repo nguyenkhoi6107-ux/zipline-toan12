@@ -8,10 +8,14 @@
 import { getBackend, randomRoomCode, SERVER_NOW } from './net.js';
 import { loadConfig, mergeSettings, fmtTime, el, playersOf } from './ui.js';
 import { rankPlayers } from './rank.js';
+import { initBloodMoonPortal, navigateWithBloodMoon } from './portal.js';
+
+initBloodMoonPortal();
 
 const $ = (id) => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const local = qs.has('local');
+if ($('teacherHomeLink')) $('teacherHomeLink').href = 'index.html' + (local ? '?local=1' : '');
 const defaults = await loadConfig();
 const backend = await getBackend();
 let code = qs.get('room');
@@ -65,7 +69,7 @@ $('setupForm').addEventListener('submit', async (e) => {
     let c = randomRoomCode();
     for (let i = 0; i < 20 && (await backend.roomExists(c)); i++) c = randomRoomCode();
     await backend.createRoom(c, s);
-    location.href = `teacher.html?room=${c}${local ? '&local=1' : ''}`;
+    navigateWithBloodMoon(`teacher.html?room=${c}${local ? '&local=1' : ''}`);
   } catch (ex) {
     $('setupErr').textContent = 'Không tạo được phòng: ' + ex.message;
   }
@@ -196,5 +200,16 @@ if (!code) {
   joinUrl.searchParams.set('room', code);
   if (local) joinUrl.searchParams.set('local', '1');
   $('joinHint').textContent = `Học sinh mở ${joinUrl.href} và nhập tên`;
+  if ($('btnCopyLink')) {
+    $('btnCopyLink').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(joinUrl.href);
+        if ($('copyText')) $('copyText').textContent = 'Đã chép link!';
+        setTimeout(() => { if ($('copyText')) $('copyText').textContent = 'Sao chép link'; }, 1800);
+      } catch {
+        prompt('Sao chép đường dẫn cho học sinh:', joinUrl.href);
+      }
+    });
+  }
   backend.subscribeRoom(code, onRoom);
 }

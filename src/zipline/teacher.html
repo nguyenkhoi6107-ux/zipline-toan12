@@ -2,26 +2,90 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zip Line Thoát Hồ Ly – Màn hình giáo viên</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Foxy Running · Tạo phòng chơi (Đài chỉ huy)</title>
+  <meta name="theme-color" content="#0b0720">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cinzel+Decorative:wght@700;900&family=Grenze+Gotisch:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&text=%E7%8B%90&display=block">
+  <link rel="stylesheet" href="css/style.css?v=2">
 </head>
-<body>
-  <div id="banner" class="banner hidden"></div>
-  <div class="teacher">
+<body class="page-teacher">
+  <!-- Bối cảnh núi tuyết đêm trăng máu đồng bộ với Landing Page & Màn chơi -->
+  <div class="world-backdrop" aria-hidden="true">
+    <div class="wb-moon"></div>
+    <svg class="wb-mountains" viewBox="0 0 1920 540" preserveAspectRatio="none">
+      <polygon points="0,540 240,180 540,540" fill="#2a1655"/>
+      <polygon points="240,180 175,275 240,255 305,275" fill="#ede4ff" opacity="0.55"/>
+      <polygon points="380,540 820,95 1260,540" fill="#341c66"/>
+      <polygon points="820,95 720,235 820,205 920,235" fill="#f3ecff" opacity="0.6"/>
+      <polygon points="1080,540 1520,145 1960,540" fill="#281452"/>
+      <polygon points="1520,145 1435,260 1520,235 1605,260" fill="#ede4ff" opacity="0.5"/>
+      <path d="M0,540 L0,430 Q480,390 960,435 T1920,420 L1920,540 Z" fill="#120829"/>
+    </svg>
+  </div>
 
-    <!-- 1. Tạo phòng -->
-    <section id="setup" class="card hidden">
-      <h2>🧑‍🏫 Tạo phòng chơi</h2>
+  <div id="banner" class="banner hidden"></div>
+
+  <header class="sub-nav">
+    <a class="hud-brand" id="teacherHomeLink" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M4 5l7 7h10l7-7-2 13-10 10L6 18z" fill="currentColor"/><circle cx="12" cy="17" r="1.6" fill="#0b0720"/><circle cx="20" cy="17" r="1.6" fill="#0b0720"/></svg>
+      <span class="brand-name">Foxy Running</span>
+    </a>
+    <span class="sub-nav-tag">Đài chỉ huy phòng chơi · Toán 12 Oxyz</span>
+    <a class="btn ghost small-btn" id="soloTryLink" href="play.html?mode=solo">Chơi thử 1 mình</a>
+  </header>
+
+  <main class="teacher">
+    <!-- 1. TẠO PHÒNG CHƠI (Thiết kế tinh gọn, đẹp mắt) -->
+    <section id="setup" class="card setup-card hidden">
+      <div class="setup-header">
+        <span class="setup-kicker">Đêm trăng máu trên đỉnh núi</span>
+        <h1>Khởi tạo phòng chơi</h1>
+        <p class="muted">Mỗi học sinh một thiết bị, cùng giải phương trình đường thẳng Oxyz để bắn dây Zip Line thoát khỏi Hồ Ly.</p>
+      </div>
+
       <form id="setupForm" autocomplete="off">
-        <div class="settings-grid">
-          <label>Số màn <input id="sLevels" type="number" min="1" max="20" step="1"></label>
-          <label>Thời gian (phút) <input id="sTime" type="number" min="1" max="60" step="1"></label>
-          <label>Số mạng <input id="sLives" type="number" min="1" max="5" step="1"></label>
-          <label style="align-content:end"><span><input id="sEndFirst" type="checkbox"> Kết thúc ván khi có người đầu tiên về đích</span></label>
+        <div class="stat-tiles">
+          <label class="stat-tile">
+            <span class="tile-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M14 7h7v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Số vách núi (màn)
+            </span>
+            <input id="sLevels" type="number" min="1" max="20" step="1">
+            <span class="tile-hint">Mặc định 8 màn đủ 4 dạng câu hỏi</span>
+          </label>
+
+          <label class="stat-tile">
+            <span class="tile-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Thời gian (phút)
+            </span>
+            <input id="sTime" type="number" min="1" max="60" step="1">
+            <span class="tile-hint">Đếm ngược đồng bộ toàn lớp</span>
+          </label>
+
+          <label class="stat-tile">
+            <span class="tile-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              Số mạng mỗi em
+            </span>
+            <input id="sLives" type="number" min="1" max="5" step="1">
+            <span class="tile-hint">Hồi sinh tại chỗ khi bị bắt</span>
+          </label>
         </div>
-        <details>
-          <summary>Tham số hồ ly (chỉnh sau khi thử lớp)</summary>
+
+        <label class="switch-row">
+          <input id="sEndFirst" type="checkbox">
+          <span class="switch-text">
+            <b>Kết thúc ngay khi có học sinh đầu tiên về đích</b>
+            <small class="muted">Tắt tùy chọn này nếu muốn chờ cả lớp hoàn thành trong thời gian quy định.</small>
+          </span>
+        </label>
+
+        <details class="adv-details">
+          <summary>Tùy chỉnh nâng cao · Tốc độ &amp; độ hung dữ của Hồ Ly</summary>
           <div class="settings-grid">
             <label>Tốc độ tiến (m/giây) <input id="mSpeed" type="number" min="0" step="0.1"></label>
             <label>Quãng nhảy khi sai (m) <input id="mJump" type="number" min="0" step="1"></label>
@@ -31,44 +95,63 @@
             <label>Bỏ xa khi qua màn (m) <input id="mGainLv" type="number" min="0" step="1"></label>
           </div>
         </details>
-        <p><button class="btn primary big" type="submit">Tạo phòng</button></p>
-        <div class="error" id="setupErr"></div>
+
+        <div class="setup-footer">
+          <button class="btn primary big setup-submit" type="submit">
+            <span>Tạo phòng &amp; Mở sảnh chờ</span>
+            <svg class="btn-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="error" id="setupErr"></div>
+        </div>
       </form>
     </section>
 
-    <!-- 2. Phòng chờ / đang chơi / tổng kết -->
-    <section id="roomView" class="hidden">
-      <div class="top">
-        <div>
-          <div class="muted">Mã phòng</div>
-          <div class="room-code" id="roomCode">----</div>
+    <!-- 2. SẢNH CHỜ / ĐANG CHƠI / BẢNG XẾP HẠNG SỐNG -->
+    <section id="roomView" class="room-view hidden">
+      <div class="card command-bar">
+        <div class="cmd-left">
+          <span class="cmd-label">Mã phòng 4 số</span>
+          <div class="room-code-row">
+            <div class="room-code" id="roomCode">----</div>
+            <button class="btn ghost small-btn" id="btnCopyLink" type="button" title="Sao chép đường dẫn vào phòng">
+              <svg class="btn-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              <span id="copyText">Sao chép link</span>
+            </button>
+          </div>
           <div class="muted small" id="joinHint"></div>
         </div>
-        <div style="text-align:right">
-          <div class="muted" id="statusText">Đang chờ</div>
+
+        <div class="cmd-right">
+          <div class="status-badge" id="statusText">Đang chờ</div>
           <div class="big-timer" id="bigTimer">--:--</div>
           <div class="actions" style="justify-content:flex-end">
-            <button class="btn primary big" id="btnStart">▶ Bắt đầu</button>
-            <button class="btn" id="btnEnd">⏹ Kết thúc sớm</button>
-            <button class="btn" id="btnNew">＋ Ván mới</button>
+            <button class="btn primary big" id="btnStart" type="button">Bắt đầu cuộc chạy trốn</button>
+            <button class="btn" id="btnEnd" type="button">Kết thúc sớm</button>
+            <button class="btn" id="btnNew" type="button">Tạo ván mới</button>
           </div>
         </div>
       </div>
 
-      <div class="card" id="lobbyCard">
-        <h3>Đã vào phòng: <span id="lobbyCount">0</span></h3>
+      <div class="card lobby-card" id="lobbyCard">
+        <div class="card-head">
+          <h3>Học sinh đã vào trại (<span id="lobbyCount">0</span>)</h3>
+          <span class="muted small">Danh sách tự động cập nhật theo thời gian thực</span>
+        </div>
         <div class="lobby-names" id="lobbyNames"></div>
       </div>
 
-      <div class="card hidden" id="liveCard">
+      <div class="card live-card hidden" id="liveCard">
         <div id="podium" class="podium hidden"></div>
-        <table class="live">
-          <thead><tr><th>Hạng</th><th>Tên</th><th>Tiến độ</th><th>Mạng</th><th>Hồ ly</th><th>Đúng/Sai</th></tr></thead>
-          <tbody id="liveBody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="live">
+            <thead><tr><th>Hạng</th><th>Học sinh</th><th>Tiến độ vượt vách núi</th><th>Mạng</th><th>Khoảng cách Hồ Ly</th><th>Đúng / Sai</th></tr></thead>
+            <tbody id="liveBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
-  </div>
-  <script type="module" src="js/teacher.js"></script>
+  </main>
+
+  <script type="module" src="js/teacher.js?v=2"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
  * Nền đen được xóa bằng loang màu (flood fill) từ mép ảnh nên viền tối bên trong nhân vật giữ nguyên.
  */
 
-function loadImage(src) {
+export function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -21,7 +21,7 @@ function loadImage(src) {
  * @param {{x:number,y:number,w:number,h:number}[]} erase  vùng xóa thêm (ví dụ dấu logo), theo tọa độ ảnh gốc
  * @returns {HTMLCanvasElement} đã cắt sát nhân vật
  */
-function extract(img, rect, erase = []) {
+export function extract(img, rect, erase = []) {
   const c = document.createElement('canvas');
   c.width = rect.w;
   c.height = rect.h;
